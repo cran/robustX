@@ -1,0 +1,16 @@
+a3e35b574e245749fb78a42951726a21 *ChangeLog
+eea794c59c928268ff6c45b5378ca042 *DESCRIPTION
+7159d8dcfef295b7cab0bcbca4ab54a0 *NAMESPACE
+2a6244386492281b553b6a32b33d99f9 *R/BACON-alg.R
+55eea327e8a2cc885243ee333a7edc3c *R/L1medians.R
+c2893ab50b2dabb02f7c555ebef6026b *R/rbwheel-fun.R
+8a4a571d7a0a6c26b05b84fd5042c185 *demo/00Index
+9e3bfe04a6a8f4ae1061ed0212a23531 *demo/rbwheel_d.R
+196b26bd0d143e37c07baf8fc2c2de0e *demo/rbwheel_ics.R
+74013838270cf649c4aa7d2d01cb37ed *man/BACON.Rd
+108c2656fb75695eef146379a36457e2 *man/L1median.Rd
+aa2e11098e30851c2b301a2e5e60626c *man/Qrot.Rd
+b5f688a0bea21211594be23d6eeac149 *man/mvBACON.Rd
+2381001f27b90ced8a409fc0daf4cb46 *man/rbwheel.Rd
+770f1373945d8cf5a4b3d2af482125b6 *man/robustX-package.Rd
+d33803eaf584d6845b2ce70f1ee7614f *tests/L1med-tst.R
