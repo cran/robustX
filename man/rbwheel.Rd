@@ -57,7 +57,13 @@ rbwheel(n, p, frac = 1/p, sig1 = 0.05, sig2 = 1/10,
   \item{n1}{the number of \dQuote{good} observations, see above.}
   \item{n2}{the number of \dQuote{outlying} observations, \eqn{n2 = n - n1}.}
 }
-\references{\url{http://stat.ethz.ch/research/areas/robustness}
+\references{
+  \url{http://stat.ethz.ch/people/maechler/robustness}
+  %% now contains the talk @ ICORS 2009 (Parma)
+
+  Stahel, W.~A. and \enc{Mächler}{Maechler}, M. (2009).
+  Comment on ``invariant co-ordinate selection'',
+  \emph{Journal of the Royal Statistical Society B} \bold{71}, 584--586.
 }
 \author{Werner Stahel and Martin Maechler}
 % \seealso{ %............
@@ -100,7 +106,8 @@ if(require("ICS")) {
   plot(X.paM.)# ditto
   plot(X.paR)# very clear
 }
-## Similar such experiments --->  demo(rbwheel)
+## Similar such experiments --->  demo(rbwheel_d)  and   demo(rbwheel_ics)
+##                                --------------         -----------------
 }
 \keyword{distribution}
 \keyword{robust}
