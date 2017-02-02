@@ -1,7 +1,9 @@
 optimMethods <- eval(formals(optim)$method)
-## nlminb(): "direct", using "gradient", also using "Hessian"
-nlminbMethods <- c("nlminb", "nlminb_1D","nlminb_2D")
-
+## nlminb(): 1) "direct",  2) using "gradient",  3) also using "Hessian"
+nlminbMethods <- c("nlminb"
+		   ## FIXME (below "not yet implemented"):
+		   ## , "nlminb_1D","nlminb_2D")
+		   )
 
 ### TODO:
 ###
@@ -10,7 +12,7 @@ nlminbMethods <- c("nlminb", "nlminb_1D","nlminb_2D")
 ### *) Hessian both for  nlm() and nlminb()
 
 
-L1median <- function(X, m.init = apply(X, 2, median), weights = NULL,
+L1median <- function(X, m.init = colMedians(X), weights = NULL,
 		     method = c("nlm", "HoCrJo", "VardiZhang",
 				optimMethods , nlminbMethods),
 		     pscale = apply(abs(centr(X, m.init)), 2, mean, trim = 0.40),
@@ -18,7 +20,7 @@ L1median <- function(X, m.init = apply(X, 2, median), weights = NULL,
 		     zero.tol = 1e-15, ...)
 {
     ## Purpose: Compute the multivariate L1-median,  by different algorithms,
-    ## -------  notably using an R-builtin optimizer such as nlms(), optim(),
+    ## -------  notably using an R-builtin optimizer such as nlm(), optim(),
     ##  or  nlminb() [not yet]
     ## ----------------------------------------------------------------------
     ## Arguments: X  : [n x p] data matrix
@@ -32,6 +34,7 @@ L1median <- function(X, m.init = apply(X, 2, median), weights = NULL,
     ## Author: Martin Maechler, 5 Dec 2005
     ##         For method = "HoCrJo": originally Kristel Joossens, see below
 
+    if(is.data.frame(X)) X <- data.matrix(X)
     ## slightly faster version of 'sweep(x, 2, m)':
     centr <- function(X,m) X - rep(m, each = n)
 
@@ -104,7 +107,7 @@ L1median <- function(X, m.init = apply(X, 2, median), weights = NULL,
             ## similarly efficient as nlm() !
 
             stop("nlminb with Gradient -- not yet implemented")
-### FIXME
+if(FALSE) {### FIXME
             Fenv <- new.env()
             L1f <- function(m) {
                 X. <- centr(X,m)
@@ -113,7 +116,7 @@ L1median <- function(X, m.init = apply(X, 2, median), weights = NULL,
                 ## attr(f, "gradient") <- - colSums(X. / d.i)
                 ##  f
             }
-
+}
             nlminb(..., ..., ...)
         }
 
@@ -209,11 +212,11 @@ L1median <- function(X, m.init = apply(X, 2, median), weights = NULL,
         ## TODO: weights == 0 --> leave away those weights and observations
         wts <- if(is.null(weights)) 1 else weights
 
-        T.t <- function(y) { ## T~() - the original iterator function  [2.3]
-            Id <- wts/sqrt(rowSums(centr(X, y) ^ 2))
-            Id[!is.finite(Id)] <- 0     # where denominator was 0
-            colSums(X * Id) / sum(Id)
-        }
+        ## T.t <- function(y) { ## T~() - the original iterator function  [2.3]
+        ##     Id <- wts/sqrt(rowSums(centr(X, y) ^ 2))
+        ##     Id[!is.finite(Id)] <- 0     # where denominator was 0
+        ##     colSums(X * Id) / sum(Id)
+        ## }
 
         Tnew <- function(y) { ## T() - the new iterator function      [2.6]
             X. <- centr(X, y)

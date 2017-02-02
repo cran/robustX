@@ -1,5 +1,5 @@
-### Original is  /usr/local/app/R/R_local/src/covRobust/R/cov.nnve.R
-###              9129   Nov 18 2003  cov.nnve.R
+### Original is  /usr/local.nfs/app/R/R_local/src/covRobust/R/cov.nnve.R
+###              9129   Nov 18 2003  cov.nnve.R  [still there in Oct.2014]
 ### --> keep as covNNC1 (unexported) in ./covNNC-orig.R
 
 ## Much improved by Martin Maechler :
@@ -52,11 +52,12 @@ covNNC <- function(X, k = min(12, n-1), pnoise = 0.05,
         ## Function to perform the Nearest Neighbour cleaning of
         ##--------------------------------------------------------------
 
-        dDk <- function(x, lambda, k, d, alpha.d) {
-            ## find the density of D_k
-            exp( - lambda * alpha.d * x^d + log(2) +
-                k * log(lambda * alpha.d) + log(x) * (d * k - 1) - log(gamma(k)))
-        }
+	## unused now
+        ## dDk <- function(x, lambda, k, d, alpha.d) {
+        ##     ## find the density of D_k
+        ##     exp( - lambda * alpha.d * x^d + log(2) +
+        ##         k * log(lambda * alpha.d) + log(x) * (d * k - 1) - log(gamma(k)))
+        ## }
 
         ## MM:
         q.dDk <- function(x, lam1, lam2, k, d, alpha.d) {
@@ -116,14 +117,13 @@ covNNC <- function(X, k = min(12, n-1), pnoise = 0.05,
         {
             it <- it+1
             ## E - step
-            if(FALSE) { ## old code (suffering from "0/0")
-                dDk.l1 <- dDk(k.dists, lambda1, k = k, d = d, alpha.d = alpha.d)
-                dDk.l2 <- dDk(k.dists, lambda2, k = k, d = d, alpha.d = alpha.d)
-                delta <- (p * dDk.l1) / (p* dDk.l1 + (1 - p) * dDk.l2)
-                delta0 <-(1) / (1 + (1/p - 1) * dDk.l2/dDk.l1)
-            }
-            delta <- (1) / (1 + (1/p - 1) * q.dDk(k.dists, lambda2, lambda1,
-                                                  k = k, d = d, alpha.d = alpha.d))
+            ## old code (suffering from "0/0")
+            ##     dDk.l1 <- dDk(k.dists, lambda1, k = k, d = d, alpha.d = alpha.d)
+            ##     dDk.l2 <- dDk(k.dists, lambda2, k = k, d = d, alpha.d = alpha.d)
+            ##     delta <- (p * dDk.l1) / (p* dDk.l1 + (1 - p) * dDk.l2)
+            ##     delta0 <-(1) / (1 + (1/p - 1) * dDk.l2/dDk.l1)
+            delta <- 1 / (1 + (1/p - 1) * q.dDk(k.dists, lambda2, lambda1,
+                                                k = k, d = d, alpha.d = alpha.d))
             ## M - step
             p <- sum(delta)/n
             akNN.d <- alpha.d * k.dists^d
@@ -150,11 +150,10 @@ covNNC <- function(X, k = min(12, n-1), pnoise = 0.05,
         Sig2 <- tpsig2 %*% (mprob * t(tpsig2))/sum(mprob)
         sd1 <- sqrt(diag(Sig1))
         sd2 <- sqrt(diag(Sig2))
-        zz <- list(z = round(probs), kthNND = k.dists, probs = probs,
-                   p = p, mu1 = mu1, mu2 = mu2, sd1 = sd1, sd2 = sd2,
-                   lambda1 = lambda1, lambda2 = lambda2, Sig1 = Sig1, Sig2 = Sig2,
-                   iter = it)
-        return(zz)
+        list(z = round(probs), kthNND = k.dists, probs = probs,
+             p = p, mu1 = mu1, mu2 = mu2, sd1 = sd1, sd2 = sd2,
+             lambda1 = lambda1, lambda2 = lambda2, Sig1 = Sig1, Sig2 = Sig2,
+             iter = it)
     }
     ##----- end of nclean.sub-----------------------------------------------
 
@@ -165,7 +164,7 @@ covNNC <- function(X, k = min(12, n-1), pnoise = 0.05,
     d <- ncol(X)
     stopifnot(n >= 3, d >= 1)
 
-    S.mean <- apply(X, 2, median)
+    S.mean <- colMedians(X)
     S.sd <- apply(X, 2, mad)
     my.scale <- function(x) {
         sweep(sweep(x, 2, S.mean, check.margin = FALSE),

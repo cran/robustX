@@ -43,11 +43,11 @@ rbwheel <- function(n,		# observations
     stopifnot(is.numeric(frac), 0 <= frac, frac < 1,
 	      n >= 1, p >= 2)
     ## compatibility-warning -- at most once per session :
-    if(missing(scaleAfter) &&
-       (is.null(w <- getOption("rbwheel.warn.scaleA")) || isTRUE(w))) {
-	if(is.null(w)) options( rbwheel.warn.scaleA = FALSE)
-	warning("Note: rbwheel() now uses scaleAfter = TRUE  by default")
-    }
+    ## if(missing(scaleAfter) &&
+    ##    (is.null(w <- getOption("rbwheel.warn.scaleA")) || isTRUE(w))) {
+    ##     if(is.null(w)) options( rbwheel.warn.scaleA = FALSE)
+    ##     warning("Note: rbwheel() now uses scaleAfter = TRUE  by default")
+    ## }
 
     ## a simplified version of scale.default :
     scale.simply <- function(x) {
@@ -62,13 +62,18 @@ rbwheel <- function(n,		# observations
 
     n1 <- pmax(0, pmin(n, round((1-frac)*n)))
     n2 <- n-n1 ## ~= frac * n
-    i <- if(n1 < n) (n1+1):n else integer(0) # index of n2 "outliers"
 
     d0 <- matrix(0, n,p)
     d0[ , -1] <- rGood(n*(p-1))
-    d0[i, -1] <- sig2 * d0[i,-1]
-    d0[-i, 1] <- sig1 * rGood(n1)
-    d0[ i, 1] <- rOut(n2)
+    d1 <- sig1 * rGood(n1)
+    if(n1 < n) { ## have *some* outliers
+	i <- (n1+1):n
+	d0[i, -1] <- sig2 * d0[i,-1]
+	d0[-i, 1] <- d1
+	d0[ i, 1] <- rOut(n2)
+    } else { ## n1 == n; n2 == 0: no outliers
+	d0[, 1] <- d1
+    }
 
     d1 <- {
 	if(spherize) { # use Chol(), such that X_1 remains unchanged:
