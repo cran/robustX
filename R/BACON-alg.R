@@ -2,7 +2,6 @@
 ####  15 Dec 2005     --> see ./BACON-alg_email.txt
 ####
 
-#################### MAIN PROGRAM BACON
 
 BACON <- function(x, y = NULL, intercept = TRUE,
                   m = min(collect * p, n * 0.5),
@@ -50,10 +49,8 @@ BACON <- function(x, y = NULL, intercept = TRUE,
     ## Written 25.05.01 by U. Oetliker for S-Plus 5.1 (Unix).
     ## Modified 28.05.01 / 31.05.01 / 01.06.01 / 09.06.01
     ##	 10.06.01 / 17.06.01
-
-    ## 'U. Oetliker' = Ueli Oetliker --- SFSO (Swiss Federal Statistical Office)
     ##
-########## BEGIN BACON
+    ## 'U. Oetliker' = Ueli Oetliker --- SFSO (Swiss Federal Statistical Office)
 
     if(is.vector(x))
 	x <- as.matrix(x)
@@ -62,26 +59,23 @@ BACON <- function(x, y = NULL, intercept = TRUE,
     p <- ncol(x)
     stopifnot(n > 0, p > 0, n > p, n >= m, m > 0,
               0 < alpha, alpha < 1)
-    if(length(y) == 0)
-	return(mvBACON(x, collect=collect, m=m,
-                       alpha=alpha, init.sel=init.sel, man.sel=man.sel,
-                       maxsteps=maxsteps, verbose=verbose))
-    else {
-	mvB <- mvBACON(x, collect=collect, m=m,
-                       alpha=alpha, init.sel=init.sel, man.sel=man.sel,
-                       maxsteps=maxsteps, verbose=verbose)
-	regB <- .lmBACON (x, y, intercept,
-				 mvB$dis, init.fraction, collect, alpha,
-				 maxsteps, verbose)
-	return(list(subset=  regB$subset,
-		    tis=     regB$tis,
-		    mv.subset= mvB$subset))
-    }
-}
+    mvB <- mvBACON(x, collect=collect, m=m,
+                   alpha=alpha, init.sel=init.sel, man.sel=man.sel,
+                   maxsteps=maxsteps, verbose=verbose)
+    if(!is.null(y)) { ## regression
+	regB <- .lmBACON(x, y, intercept, init.dis = mvB$dis,
+			 init.fraction=init.fraction, collect=collect,
+			 alpha=alpha, maxsteps=maxsteps, verbose=verbose)
+	list(subset   = regB$ subset
+           , tis      = regB$ tis
+           , mv.subset= mvB $ subset
+           , mv.dis   = mvB $ dis
+           , steps    = c(mv = mvB$steps, lm = regB$steps)
+             )
+    } else ## multivariate
+        mvB
+} # end{ BACON() }
 
-########## END BACON
-
-#################### FUNCTION mvBACON
 
 mvBACON <-
     function(x, collect = 4, m = min(collect * p, n * 0.5), alpha = 0.95,
@@ -109,28 +103,25 @@ mvBACON <-
 	chr <- max(0, (h - r) / (h + r))
 	cnp <- 1 + (p + 1) / (n - p) + 2 / (n - 1 - 3*p)
 	cnpr <- cnp + chr
-	chisq <- qchisq(alpha / n, p, lower.tail = FALSE)
-	return(sqrt(chisq) * cnpr)
+	## return
+        cnpr * sqrt( qchisq(alpha / n, p, lower.tail = FALSE) )
     }
 
     init.sel <- match.arg(init.sel)
 
     n <- nrow(x)
     p <- ncol(x)
-    stopifnot(n > 0, p > 0, n > p, n >= m, m > 0,
-              0 < alpha, alpha < 1)
+    stopifnot(n > p, p > 0,  0 < alpha, alpha < 1)
 
     ordered.indices <-
         switch(init.sel,
                "Mahalanobis" = {
-                   center <- colMeans(x)
-                   cov <- var(x)
-                   order(mahalanobis(x, center, cov))
+                   order(mahalanobis(x, center = colMeans(x), cov = var(x)))
                },
                "random" = sample(n),
                "manual" = {
                    m <- length(man.sel)
-                   stopifnot(is.numeric(man.sel), m > 0,
+                   stopifnot(is.numeric(man.sel),
                              1 <= man.sel, man.sel <= n,
                              man.sel == as.integer(man.sel))
                    c(man.sel, c(1:n)[-man.sel])
@@ -142,13 +133,15 @@ mvBACON <-
                ## otherwise:
                stop("invalid 'init.sel' -- should not happen; please report!")
                )
+    m <- as.integer(m)
+    stopifnot(n >= m, m > 0)
 
     ordered.x <- x[ordered.indices, , drop = FALSE]
     ## FIXME{MM}: qr(.) is used to determine rank -- *not* state of the art
     ## see Matrix::rankMatrix
     while (m < n && p > (rnk <- qr(var(ordered.x[1:m, , drop = FALSE]))$rank))
-	m <- m + 1
-
+	m <- m + 1L
+    if(verbose) cat("rank(ordered.x[1:m,] >= p  ==> chosen m = ", m, "\n")
     if(rnk < p && !allowSingular)
         stop("matrix-rank ( x[1:m,] ) < p  for all m <= n")
 
@@ -156,14 +149,14 @@ mvBACON <-
 
     presubset <- rep(FALSE, n)
     converged <- FALSE
-    steps <- 1
+    steps <- 1L
     repeat {
         r <- sum(subset)
         if(verbose) trace1(steps, r, n)
-	center <- colMeans(x[subset, , drop = FALSE])
-	cov <- var(x[subset, , drop = FALSE])
+        x. <- x[subset, , drop = FALSE]
+	center <- colMeans(x.)
+	cov <- var(x.)
 	dis <- sqrt(mahalanobis(x, center, cov))
-
         converged <- !any(xor(presubset, subset))
         if(converged)
             break
@@ -171,7 +164,7 @@ mvBACON <-
 	presubset <- subset
 	limit <- chiCrit(n, p, r, alpha)
 	subset <- dis < limit
-	steps <- steps + 1
+	steps <- steps + 1L
         if (steps > maxsteps)
             break
     }
@@ -180,15 +173,10 @@ mvBACON <-
 
     list(dis = dis, subset = subset, center = center, cov = cov,
          steps = steps, limit = limit, converged = converged)
-}
-
-########## END mvBACON
+} # end{ mvBACON() }
 
 
-
-
-#################### FUNCTION .lmBACON
-
+## exported, even though auxiliary to BACON() :
 .lmBACON <- function(x, y, intercept = TRUE, init.dis,
                     init.fraction = 0, collect = 4, alpha = 0.95,
                     maxsteps = 100, verbose = TRUE)
@@ -223,18 +211,21 @@ mvBACON <-
     ##
     ## Written 09.06.01 by U. Oetliker for S-Plus 5.1 (Unix).
     ## Modified 10.06.01
-    ##
-########## INTERNAL FUNCTIONS OF .lmBACON
+
+    ## Diagnosing "Hii" bug: Daniel Weeks <weeks at pitt dot edu>
+    ## Speed up GiveTis() by Martin Maechler
+
+    ## INTERNAL FUNCTIONS OF .lmBACON :
 
     trace1 <- function(i, r, n,
                        init.steps = FALSE, skip.init = FALSE) {
-        cat("Reg-BACON (",if(init.steps)"init ", "subset no. ", i,
+        cat("Reg-BACON (", if(init.steps) "init ", "subset no. ", i,
             if(skip.init) " after skipping init", "): ",
             r, " of ", n, " (", round(r/n*100, digits = 2), " %)",
             sep = "", fill = TRUE)
     }
 
-    GiveTis <- function(x, y, subset, ordered.x, ordered.y, m = 0, check.rank = FALSE)
+    GiveTis <- function(x, y, subset, ordered.x, ordered.y, m = 1L, check.rank = FALSE)
     {
 	## This function calculates the t(i)s
 	## for each observation of the data set y ~ x.
@@ -252,98 +243,87 @@ mvBACON <-
 	##   PP = x(xTx)-1xT
 	##
 	## subset is a logical vector of length n
-	## with T indicating belonging to the subset
+	## indicating belonging to the subset
 	##
 	## Written 09.06.01 by U. Oetliker for S-Plus 5.1 (Unix).
 	##
-
 	n <- nrow(x)
 	p <- ncol(x)
 
 	if(check.rank) {
-	    while (m < n && p > qr(crossprod(ordered.x[1:m,,drop = FALSE]))$rank)
-		m <- m + 1
-
+	    while (m < n && p > qr(ordered.x[1:m,,drop = FALSE])$rank)
+		m <- m + 1L
 	    xm <- ordered.x[1:m,, drop = FALSE]
 	    ym <- ordered.y[1:m]
 	} else {
 	    xm <- ordered.x
 	    ym <- ordered.y
 	}
+	## force(ym)# "fix" codetools
 	nm <- nrow(xm)
+        stopifnot(is.matrix(xm)) ## xm  <- as.matrix(xm)
 
-	xm  <- as.matrix(xm)
-	fit.m <- lm(ym ~ xm[,1:ncol(xm)] -1)
-
-	betahatm <- fit.m$coef
+	fit.m <- .lm.fit(xm, ym) ## lm(ym ~ xm[,1:ncol(xm)] -1)
+	betahatm <- fit.m$coefficients
 	x  <- as.matrix(x)
 	resid <- y - as.vector(x %*% betahatm)
 
 	em <- fit.m$residuals
 	sigmahatm <- sqrt(sum(em * em) / (nm - p))
-	hiim  <- hatvalues(fit.m)# = lm.influence(fit.m, do.coef=FALSE) $ hat
-
-	sqroot <- 1 + (1 - 2*subset) * hiim # = (1 - Hii) iff subset; (1 + Hii) otherwise
+	## Hii <- hat(fit.m$qr) # lm.influence(fit.m, do.coef=FALSE) $ hat
+        ## xxI <- solve(crossprod(xm)) # the same should be more stable:
+        xxI <- chol2inv(qr.R(structure(fit.m, class="qr")))
+        Hii <- diag(x %*% tcrossprod(xxI, x)) # = diag(x %*% xxI %*% t(x))
+	sqroot <- 1 + (1 - 2*subset) * Hii # = (1 - Hii) iff subset; (1 + Hii) otherwise
 	tis <- resid / (sigmahatm * sqrt(sqroot))
 	list(m = m, tis = tis)
     }## end{ GiveTis }
 
-
-########## BEGIN .lmBACON
-
+    ## Begin  .lmBACON ------------------------------------------------------
     ordered.indices <- order(init.dis)
     if(intercept)
 	x <- cbind(1, x)
     n <- nrow(x)
     p <- ncol(x)
-    steps <- 0
+    steps <- 0L
 
     ordered.x <- x[ordered.indices, , drop = FALSE]
     ordered.y <- y[ordered.indices]
-    if(init.fraction > sqrt(.Machine$double.eps)) {
-	m <- round(init.fraction * n)
-	## tis <- GiveTis(x, y, subset, ordered.x, ordered.y, m, TRUE)
-	subset <- is.element(1:n, ordered.indices[1:m])
-	tis <- GiveTis(x, y, subset, ordered.x, ordered.y, m, TRUE)
-	m <- tis$m
-	tis <- abs(tis$tis)
-	if(verbose) trace1(steps, m, n, skip.init = TRUE)
-
-	ordered.indices <- order(tis)
+    skip.init <- (init.fraction > sqrt(.Machine$double.eps))
+    ## size of initial subset [ 4*p by default ] :
+    m <- as.integer(if(skip.init) round(init.fraction * n) else collect * p)
+    if(m <= 0) {
+	message(gettextf(".lmBACON(): m = %d replaced by m = 1", m), domain =NA)
+	m <- 1L
+    }
+    subset <- is.element(1:n, ordered.indices[1:m])
+    tis <- GiveTis(x, y, subset, ordered.x, ordered.y, m, TRUE)
+    m <- tis$m
+    tis <- abs(tis$tis)
+    if(verbose) trace1(steps, m, n, skip.init=skip.init, init.steps = !skip.init)
+    if(skip.init) {
 	r <- m
     }
-    else {
-	m <- collect * p
-
-	subset <- is.element(1:n, ordered.indices[1:m])
-	tis <- GiveTis(x, y, subset, ordered.x, ordered.y, m, TRUE)
-	m <- tis$m
-	if(verbose) trace1(steps, m, n, init.steps = TRUE)
-	tis <- abs(tis$tis)
-
-	r <- p + 1
+    else { ## default (init.fraction = 0) :
+	r <- p + 1L
 	if(verbose) trace1(steps, r, n, init.steps = TRUE)
 	while (r < n && r < m) {
 	    ordered.indices <- order(tis)
 	    ordered.x <- x[ordered.indices, , drop = FALSE]
 	    ordered.y <- y[ordered.indices]
-
 	    subset <- is.element(1:n, ordered.indices[1:r])
 	    tis <- GiveTis(x, y, subset, ordered.x, ordered.y, r, TRUE)
-	    r <- tis$m
+	    r <- tis$m + 1L
 	    tis <- abs(tis$tis)
-
-	    r <- r + 1
-	    steps <- steps + 1
+	    steps <- steps + 1L
 	    if(verbose) trace1(steps, r, n, init.steps = TRUE)
 	}
-	ordered.indices <- order(tis)
     }
-
+    ordered.indices <- order(tis)
     subset <- is.element(1:n, ordered.indices[1:r])
     presubset <- FALSE # rep(FALSE, n)
     prepre.r <- pre.r <- 0L # == sum(presubset)
-    steps <- 0
+    steps <- 0L
     while(steps <= maxsteps &&
           !(pre.r == r && (!any(xor(presubset, subset)) || prepre.r == r))) {
 	presubset <- subset
@@ -355,10 +335,9 @@ mvBACON <-
 	limit <- qt(alpha / (2*(r + 1)), r - p, lower.tail=FALSE)
 	subset <- tis < limit
 	r <- sum(subset)
-	steps <- steps + 1
+	steps <- steps + 1L
 	if(verbose) trace1(steps, r, n)
     }
-    list(subset = subset, tis = tis)
-}
+    list(subset = subset, tis = tis, steps = steps)
+} # end{ .lmBACON() }
 
-########## END .lmBACON

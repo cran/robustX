@@ -1,9 +1,11 @@
 Package: robustX
 Type: Package
 Title: 'eXtra' / 'eXperimental' Functionality for Robust Statistics
-Version: 1.2-2
-Date: 2017-02-02
-Author: Werner Stahel, Martin Maechler and potentially others
+Version: 1.2-3
+Date: 2019-02-09
+Author: Werner Stahel,
+	Martin Maechler [aut, cre] (<https://orcid.org/0000-0002-8685-9910>)
+	and potentially others
 Maintainer: Martin Maechler <maechler@stat.math.ethz.ch>
 Description: Robustness -- 'eXperimental', 'eXtraneous', or 'eXtraordinary'
   Functionality for Robust Statistics.  In other words, methods which are not
@@ -13,7 +15,10 @@ Suggests: MASS, lattice
 Enhances: ICS
 License: GPL (>= 2)
 Encoding: UTF-8
-NeedsCompilation: no
-Packaged: 2017-02-02 08:10:58 UTC; maechler
 Repository: CRAN
-Date/Publication: 2017-02-02 12:41:49
+Repository/R-Forge/Project: robustbase
+Repository/R-Forge/Revision: 832
+Repository/R-Forge/DateTimeStamp: 2019-02-09 15:18:31
+Date/Publication: 2019-02-10 18:40:03 UTC
+NeedsCompilation: no
+Packaged: 2019-02-09 15:32:06 UTC; rforge
