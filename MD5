@@ -1,5 +1,5 @@
-4cab4781a4453bb94d8df5e91818d6e8 *ChangeLog
-a58e76d7f3a78f8c6ae296695860b779 *DESCRIPTION
+631627859f27b3d40576049cf0699227 *ChangeLog
+28ce457e173eb36235d30da677e7b55b *DESCRIPTION
 e398953d16aa396bc82cbce66c86f765 *NAMESPACE
 f0ec5f67291ef52bac8eb27aa01c935c *R/BACON-alg.R
 0828bc73e0b7651011280e339771529f *R/L1medians.R
@@ -7,7 +7,7 @@ f0ec5f67291ef52bac8eb27aa01c935c *R/BACON-alg.R
 460ddb8c63a053f87f22f98bf6feff66 *R/covNNC.R
 361756a8f5714d28dd2f53177022d47f *R/rbwheel-fun.R
 cc119f33895acbfe9f227322a6bdaaa6 *R/reclas.R
-091190d63265a504fdb5c1ca1640a8cc *build/partial.rdb
+1c9514e6325f9e5822593bf4af40e5b4 *build/partial.rdb
 8a4a571d7a0a6c26b05b84fd5042c185 *demo/00Index
 c9f0bb4d6ca2c4894943e1ec06d8df61 *demo/rbwheel_d.R
 dacd15ee32b0b5ef78fa2e9d8530c5ea *demo/rbwheel_ics.R
@@ -20,4 +20,4 @@ ef3c1ed2f6476ca141928942aec1db90 *man/covNNC.Rd
 d4cfa165dac1dad5672f56edff064f62 *man/reclas.Rd
 279ddc20ee43122b3dca40240c0dbfd3 *man/robustX-package.Rd
 127b78cd19e153dcf076ffff8125b22e *tests/L1med-tst.R
-36738d94650853d381c89cd830daf6fa *tests/cov-ex.R
+48717742db8209d9f2e796f2979e7879 *tests/cov-ex.R
